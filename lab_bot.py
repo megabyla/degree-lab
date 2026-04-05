@@ -246,6 +246,20 @@ def wear_file_path(brand, name, date):
     return os.path.join(WEAR_DIR, f"{date}-{slug(brand)}-{slug(name)}.md")
 
 
+def ensure_in_targets(brand, name, date):
+    """Auto-add to targets as 'reference' if not already present. Returns True if added."""
+    with open(TARGETS_FILE) as f:
+        content = f.read()
+    for line in content.split("\n"):
+        if line.startswith("|") and not line.startswith("| Brand") and not line.startswith("|----"):
+            cols = [c.strip() for c in line.split("|") if c.strip()]
+            if len(cols) >= 2 and cols[0].lower() == brand.lower() and cols[1].lower() == name.lower():
+                return False  # already exists
+    # Not found — auto-add as reference
+    update_targets(brand, name, "reference", "—", "auto-added from wear journal", date)
+    return True
+
+
 def write_wear_entry(brand, name, time_point, nose_notes, degree_read, skin_notes, vibe, date, now_str):
     path = wear_file_path(brand, name, date)
     degree_str = degree_read or "—"
@@ -306,15 +320,18 @@ def cmd_wear(text, api_key, token, chat_id):
     date        = datetime.now().strftime("%Y-%m-%d")
     now_str     = datetime.now().strftime("%H:%M")
 
+    auto_added = ensure_in_targets(brand, name, date)
     is_new = write_wear_entry(brand, name, time_point, nose_notes, degree_read, skin_notes, vibe, date, now_str)
     git_push(f"wear: {brand} {name} {time_point}")
 
     action = "New session" if is_new else "Entry added"
+    auto_note = "\n⚠️ Not in targets — auto-added as reference. /lab to update status." if auto_added else ""
     send(token, chat_id,
         f"📝 {action}: {brand} — {name}\n"
         f"Time point: {time_point}\n"
         f"Nose: {nose_notes}\n"
-        f"Vibe: {vibe}\n"
+        f"Vibe: {vibe}"
+        f"{auto_note}\n"
         f"Vault updated.")
 
 
