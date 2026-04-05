@@ -24,7 +24,7 @@ import yaml
 # ── Config ────────────────────────────────────────────────────────────────────
 
 JARVIS_CONFIG  = "/root/jarvis/config.yaml"
-ENV_FILE       = "/root/jarvis/.env"
+ENV_FILE       = "/root/trading-bots/mission-control/sonic/.env"
 TARGETS_FILE   = "/root/obsidian-vault/°-lab/05-targets/Perfume Targets.md"
 VAULT_PATH     = "/root/obsidian-vault"
 POLL_INTERVAL  = 3   # seconds
