@@ -100,6 +100,10 @@ def parse_pending_items(filepath):
     return pending
 
 
+def _esc(s: str) -> str:
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def generate_briefing(pending):
     now = datetime.now()
     date_str = now.strftime("%A, %b %d")
@@ -108,12 +112,12 @@ def generate_briefing(pending):
 
     lines.append("\n<b>📦 Still pending:</b>")
     for item, price in pending:
-        lines.append(f"  → {item}  {price}".rstrip())
+        lines.append(f"  → {_esc(item)}  {_esc(price)}".rstrip())
 
     lines.append(f"\n<b>📋 {PHASE} next up:</b>")
     for todo in PHASE_TODOS.get(PHASE, []):
         if todo.startswith("□"):
-            lines.append(f"  {todo}")
+            lines.append(f"  {_esc(todo)}")
 
     lines.append("\n<i>⚡ Drift check before sampling · 3 replicates min · Purge 3min between samples</i>")
     return "\n".join(lines)
