@@ -7,14 +7,27 @@ Only fires if there are still pending items — goes silent once everything is o
 
 import os
 import re
-import yaml
 import requests
 from datetime import datetime
 
-VAULT_PATH = "/root/obsidian-vault/°-lab"
-SHOPPING_FILE = f"{VAULT_PATH}/07-shopping/Pending Orders.md"
-LOG_FILE = "/root/enose/logs/daily_briefing.log"
-JARVIS_CONFIG = "/root/jarvis/config.yaml"
+_ENV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+
+def _load_env():
+    env = {}
+    if os.path.exists(_ENV_FILE):
+        with open(_ENV_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if "=" in line and not line.startswith("#"):
+                    k, v = line.split("=", 1)
+                    env[k.strip()] = v.strip()
+    return env
+
+_ENV = _load_env()
+
+_VAULT_LAB   = _ENV.get("VAULT_LAB",   "/root/obsidian-vault/°-lab")
+SHOPPING_FILE = f"{_VAULT_LAB}/07-shopping/Pending Orders.md"
+LOG_FILE      = _ENV.get("LOG_FILE",   "/root/enose/logs/daily_briefing.log")
 PHASE = "V0"  # Update as you progress: V0 → V1 → V2 → V3
 
 PHASE_TODOS = {
@@ -54,10 +67,7 @@ PHASE_TODOS = {
 
 
 def load_telegram_config():
-    with open(JARVIS_CONFIG, "r") as f:
-        cfg = yaml.safe_load(f)
-    tg = cfg["telegram"]
-    return tg["bot_token"], tg["chat_id"]
+    return _ENV["TELEGRAM_BOT_TOKEN"], _ENV["TELEGRAM_CHAT_ID"]
 
 
 def send_telegram(message: str):

@@ -20,15 +20,27 @@ import time
 from datetime import datetime
 
 import requests
-import yaml
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-JARVIS_CONFIG  = "/root/jarvis/config.yaml"
-ENV_FILE       = "/root/trading-bots/mission-control/sonic/.env"
-TARGETS_FILE   = "/root/obsidian-vault/°-lab/05-targets/Perfume Targets.md"
-WEAR_DIR       = "/root/obsidian-vault/°-lab/08-wear-journal"
-VAULT_PATH     = "/root/obsidian-vault"
+_ENV_FILE = os.path.join(os.path.dirname(__file__), ".env")
+
+def _load_env():
+    env = {}
+    if os.path.exists(_ENV_FILE):
+        with open(_ENV_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if "=" in line and not line.startswith("#"):
+                    k, v = line.split("=", 1)
+                    env[k.strip()] = v.strip()
+    return env
+
+_ENV = _load_env()
+
+TARGETS_FILE   = _ENV.get("TARGETS_FILE",   "/root/obsidian-vault/°-lab/05-targets/Perfume Targets.md")
+WEAR_DIR       = _ENV.get("WEAR_DIR",       "/root/obsidian-vault/°-lab/08-wear-journal")
+VAULT_PATH     = _ENV.get("VAULT_PATH",     "/root/obsidian-vault")
 POLL_INTERVAL  = 3
 
 STATUS_ICONS = {"target": "🎯", "reference": "📖", "watching": "👀", "killed": "❌"}
@@ -73,18 +85,7 @@ Return only the JSON object, no other text."""
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def load_config():
-    with open(JARVIS_CONFIG) as f:
-        cfg = yaml.safe_load(f)
-    tg = cfg["telegram"]
-    anthropic_key = None
-    if os.path.exists(ENV_FILE):
-        with open(ENV_FILE) as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith("ANTHROPIC_API_KEY="):
-                    anthropic_key = line.split("=", 1)[1]
-                    break
-    return tg["bot_token"], tg["chat_id"], anthropic_key
+    return _ENV["TELEGRAM_BOT_TOKEN"], _ENV["TELEGRAM_CHAT_ID"], _ENV.get("ANTHROPIC_API_KEY")
 
 
 def send(token, chat_id, text):
